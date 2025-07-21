@@ -1,0 +1,6 @@
+**/chroma_db/
+.\ollama\app-internal\chroma_db
+.\ollama\business-service\chroma_db
+.\ollama\business-service-llama2\chroma_db
+*.env
+venv/
