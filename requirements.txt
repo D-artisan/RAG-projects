@@ -5,4 +5,13 @@ langchain_community
 langchain_text_splitters
 pypdf
 requests
-python-dotenv
+streamlit
+plotly
+matplotlib
+seaborn
+scikit-learn
+numpy
+pandas
+tensorflow
+torch
+torchvision
