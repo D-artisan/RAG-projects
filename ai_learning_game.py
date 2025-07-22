@@ -64,9 +64,33 @@ st.markdown("""
 
 class AILearningGame:
     def __init__(self):
-        self.ollama_url = os.getenv("OLLAMA_API_URL")
-        self.ollama_model = os.getenv("OLLAMA_MODEL")
-        
+        # Debug environment loading
+        print("Loading environment variables...")
+        load_dotenv()  # Load again to be sure
+
+
+        # Always use session_state override if present
+        if 'ollama_url' in st.session_state and st.session_state.ollama_url:
+            self.ollama_url = st.session_state.ollama_url
+        else:
+            env_url = os.getenv("OLLAMA_API_URL")
+            if not env_url:
+                env_url = os.getenv("OLLAMA_BASE_URL")
+                if env_url and not env_url.endswith("/api/generate"):
+                    env_url += "/api/generate"
+            self.ollama_url = env_url
+            st.session_state.ollama_url = self.ollama_url
+
+        if 'ollama_model' in st.session_state and st.session_state.ollama_model:
+            self.ollama_model = st.session_state.ollama_model
+        else:
+            env_model = os.getenv("OLLAMA_MODEL")
+            self.ollama_model = env_model
+            st.session_state.ollama_model = self.ollama_model
+
+        print(f"Final OLLAMA_API_URL: {self.ollama_url}")
+        print(f"Final OLLAMA_MODEL: {self.ollama_model}")
+
         # Initialize session state
         if 'level' not in st.session_state:
             st.session_state.level = 1
@@ -81,21 +105,50 @@ class AILearningGame:
     
     def query_ollama(self, prompt):
         """Query Ollama model for explanations"""
+        if not self.ollama_url or not self.ollama_model:
+            return "⚠️ Ollama not configured. Please check your .env file with OLLAMA_API_URL and OLLAMA_MODEL."
+        
         try:
+            # Add headers for ngrok tunnels
+            headers = {
+                'Content-Type': 'application/json'
+            }
+            
+            # Add ngrok-skip-browser-warning header if using ngrok
+            if 'ngrok' in self.ollama_url:
+                headers['ngrok-skip-browser-warning'] = 'true'
+            
             data = {
                 "model": self.ollama_model,
                 "prompt": prompt,
                 "stream": False
             }
             
-            response = requests.post(self.ollama_url, json=data)
+            # Increase timeout for remote connections
+            response = requests.post(self.ollama_url, json=data, headers=headers, timeout=30)
+            
             if response.status_code == 200:
                 result = response.json()
                 return result.get("response", "No response available")
             else:
-                return f"Error: {response.status_code}"
+                return f"⚠️ Ollama API Error (Status {response.status_code}): {response.text[:200]}..."
+                
+        except requests.exceptions.ConnectionError:
+            return f"""🔌 **Connection Error**: Cannot reach Ollama at `{self.ollama_url}`
+            
+**Troubleshooting:**
+- If using ngrok: Make sure your ngrok tunnel is active
+- If using local Ollama: Start Ollama with `ollama serve`
+- Check your .env file has the correct OLLAMA_API_URL
+            
+**Current config:**
+- URL: {self.ollama_url}
+- Model: {self.ollama_model}
+            """
+        except requests.exceptions.Timeout:
+            return "⏱️ **Timeout Error**: Ollama took too long to respond. Try again or check your connection."
         except Exception as e:
-            return f"Error connecting to Ollama: {str(e)}"
+            return f"❌ **Unexpected Error**: {str(e)}"
     
     def add_achievement(self, achievement):
         """Add achievement to user's collection"""
@@ -107,11 +160,23 @@ class AILearningGame:
         """Add points to user's score"""
         st.session_state.score += points
         
-        # Level up system
-        if st.session_state.score >= st.session_state.level * 100:
+        # Level up system - more reasonable progression
+        required_points = st.session_state.level * 75  # Reduced from 100 to 75
+        if st.session_state.score >= required_points:
+            old_level = st.session_state.level
             st.session_state.level += 1
             st.balloons()
             st.success(f"🎉 Level Up! You're now Level {st.session_state.level}")
+            
+            # Show what new quests are available
+            if st.session_state.level == 2:
+                st.info("🎯 New quest unlocked: ML vs Deep Learning Quiz!")
+            elif st.session_state.level == 3:
+                st.info("🎯 New quests unlocked: Supervised & Unsupervised Learning!")
+            elif st.session_state.level == 4:
+                st.info("🎯 New quest unlocked: Neural Network Fundamentals!")
+            elif st.session_state.level == 5:
+                st.info("🎯 New quests unlocked: Advanced Deep Learning & AI Ethics!")
     
     def render_header(self):
         """Render the main header"""
@@ -129,12 +194,83 @@ class AILearningGame:
         st.sidebar.metric("Score", st.session_state.score)
         st.sidebar.metric("Quests Completed", len(st.session_state.completed_quests))
         
+        # Show progress to next level
+        current_level = st.session_state.level
+        required_for_next = current_level * 75
+        if st.session_state.score < required_for_next:
+            points_needed = required_for_next - st.session_state.score
+            st.sidebar.progress(st.session_state.score / required_for_next)
+            st.sidebar.caption(f"Next level: {points_needed} points needed")
+        else:
+            st.sidebar.success("✨ Ready to level up!")
+        
         st.sidebar.markdown("### 🏆 Achievements")
         for achievement in st.session_state.achievements:
             st.sidebar.markdown(f'<div class="achievement">{achievement}</div>', unsafe_allow_html=True)
         
         if not st.session_state.achievements:
             st.sidebar.write("No achievements yet. Complete quests to earn them!")
+        
+        # Debug panel (can be removed later)
+        with st.sidebar.expander("🔧 Debug Info"):
+            st.write(f"Current Level: {st.session_state.level}")
+            st.write(f"Current Score: {st.session_state.score}")
+            st.write(f"Points for next level: {st.session_state.level * 75}")
+            st.write(f"Completed quests: {list(st.session_state.completed_quests)}")
+            
+            # Environment variables debug
+            st.markdown("**🔍 Environment Variables:**")
+            env_vars = {
+                "OLLAMA_API_URL": os.getenv("OLLAMA_API_URL"),
+                "OLLAMA_BASE_URL": os.getenv("OLLAMA_BASE_URL"),
+                "OLLAMA_MODEL": os.getenv("OLLAMA_MODEL")
+            }
+            for key, value in env_vars.items():
+                if value:
+                    st.caption(f"{key}: {value}")
+                else:
+                    st.caption(f"{key}: ❌ Not set")
+            
+            # Ollama connection status
+            st.markdown("**🤖 Ollama Config:**")
+            if self.game.ollama_url and self.game.ollama_model:
+                st.success("✅ Configured")
+                st.caption(f"URL: {self.game.ollama_url}")
+                st.caption(f"Model: {self.game.ollama_model}")
+                
+                # Test connection button
+                if st.button("🔍 Test Connection"):
+                    with st.spinner("Testing..."):
+                        test_result = self.game.query_ollama("Hello! Just testing the connection.")
+                        if "Connection Error" in test_result or "Error" in test_result:
+                            st.error("❌ Connection failed")
+                            st.caption(test_result[:100])
+                        else:
+                            st.success("✅ Connection successful!")
+            else:
+                st.error("❌ Not configured")
+                st.caption("Check your .env file")
+            
+            # Manual override section
+            st.markdown("**⚙️ Manual Override:**")
+            manual_url = st.text_input("Ollama URL", value=self.game.ollama_url or "", 
+                                     placeholder="https://your-ngrok-url.ngrok-free.app/api/generate")
+            manual_model = st.text_input("Model Name", value=self.game.ollama_model or "", 
+                                       placeholder="gemma3:27b")
+            
+            if st.button("💾 Update Config"):
+                if manual_url and manual_model:
+                    st.session_state.ollama_url = manual_url
+                    st.session_state.ollama_model = manual_model
+                    st.success("✅ Configuration updated!")
+                    st.rerun()
+                else:
+                    st.error("Please fill in both URL and model name")
+            
+            if st.button("🚀 Force Level Up", help="Use if stuck"):
+                st.session_state.level += 1
+                st.success("Level boosted!")
+                st.rerun()
 
 class QuestManager:
     def __init__(self, game):
@@ -226,6 +362,7 @@ class QuestManager:
             st.success("🎉 Congratulations! You've completed all available quests!")
             return
         
+        # Show available quests
         for quest_id, quest in available_quests:
             with st.expander(f"{'⭐' * quest['level']} {quest['title']} (Level {quest['level']})"):
                 st.write(quest['description'])
@@ -235,6 +372,20 @@ class QuestManager:
                 if st.button(f"Start Quest: {quest['title']}", key=f"start_{quest_id}"):
                     st.session_state.current_quest = quest_id
                     st.rerun()
+        
+        # Show locked quests for motivation
+        st.markdown("### 🔒 Locked Quests (Level up to unlock!)")
+        locked_quests = []
+        for quest_id, quest in self.quests.items():
+            if (quest["level"] > st.session_state.level and 
+                quest_id not in st.session_state.completed_quests):
+                locked_quests.append((quest_id, quest))
+        
+        if locked_quests:
+            for quest_id, quest in locked_quests[:3]:  # Show first 3 locked quests
+                st.markdown(f"🔒 **{quest['title']}** (Level {quest['level']}) - {quest['description']}")
+        else:
+            st.info("🎉 All quests are unlocked! Complete the available ones above.")
 
 class QuestRenderer:
     def __init__(self, game):
@@ -274,13 +425,24 @@ class QuestRenderer:
             
             # Interactive AI explanation
             st.markdown("### 🤖 Ask AI to Explain More!")
-            if st.button("Get AI Explanation"):
-                with st.spinner("AI is thinking..."):
-                    explanation = self.game.query_ollama(
-                        "Explain artificial intelligence in simple terms for a beginner. "
-                        "Include examples and why it's important in today's world."
-                    )
-                    st.write(explanation)
+            
+            if self.game.ollama_url and self.game.ollama_model:
+                if st.button("Get AI Explanation"):
+                    with st.spinner("AI is thinking..."):
+                        explanation = self.game.query_ollama(
+                            "Explain artificial intelligence in simple terms for a beginner. "
+                            "Include examples and why it's important in today's world."
+                        )
+                        st.markdown(explanation)
+            else:
+                st.info("💡 **AI explanations require Ollama to be configured.** You can still complete this quest without it!")
+                st.markdown("""
+                **Alternative Learning:**
+                - AI is like teaching computers to think and make decisions
+                - Examples: Netflix recommendations, voice assistants, autonomous cars
+                - Important because it can solve complex problems and automate tasks
+                - The future of technology and innovation
+                """)
         
         elif quest_id == "ai_ethics":
             st.markdown("""
@@ -612,12 +774,41 @@ class QuestRenderer:
             
             # AI explanation
             if st.button(f"Get AI explanation of {selected_arch}"):
-                with st.spinner("AI is explaining..."):
-                    explanation = self.game.query_ollama(
-                        f"Explain {selected_arch} in detail for someone learning deep learning. "
-                        f"Include how it works, why it's useful, and provide simple examples."
-                    )
-                    st.write(explanation)
+                if self.game.ollama_url and self.game.ollama_model:
+                    with st.spinner("AI is explaining..."):
+                        explanation = self.game.query_ollama(
+                            f"Explain {selected_arch} in detail for someone learning deep learning. "
+                            f"Include how it works, why it's useful, and provide simple examples."
+                        )
+                        st.markdown(explanation)
+                else:
+                    st.info("💡 **AI explanations require Ollama to be configured.**")
+                    
+                    # Provide fallback explanations
+                    fallback_explanations = {
+                        "Convolutional Neural Networks (CNN)": """
+                        **CNNs work by:**
+                        - Using filters to detect features in images (like edges, shapes)
+                        - Pooling layers reduce image size while keeping important info
+                        - Multiple layers learn increasingly complex features
+                        - Great for image recognition, medical imaging, self-driving cars
+                        """,
+                        "Recurrent Neural Networks (RNN)": """
+                        **RNNs work by:**
+                        - Having memory to remember previous inputs
+                        - Processing sequences one step at a time
+                        - Good for text, speech, and time-series data
+                        - Examples: language translation, speech recognition, stock prediction
+                        """,
+                        "Transformer Networks": """
+                        **Transformers work by:**
+                        - Using attention mechanisms to focus on important parts
+                        - Processing all data simultaneously (not sequentially)
+                        - The foundation of modern AI like GPT and BERT
+                        - Examples: ChatGPT, Google Translate, text summarization
+                        """
+                    }
+                    st.markdown(fallback_explanations.get(selected_arch, "No explanation available."))
             
             if st.button("Complete Architecture Quest", key=f"complete_{quest_id}"):
                 self.complete_quest(quest_id, quest_data)
