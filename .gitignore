@@ -4,3 +4,4 @@
 .\ollama\business-service-llama2\chroma_db
 *.env
 venv/
+ollama/model_list.txt

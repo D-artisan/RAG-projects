@@ -1,0 +1,22 @@
+# Grocery List
+
+- Milk
+- Eggs
+- Bread
+- Butter
+- Cheese
+- Apples
+- Bananas
+- Chicken
+- Rice
+- Pasta
+- Tomatoes
+- Potatoes
+- Onions
+- Carrots
+- Spinach
+- Coffee
+- Tea
+- Sugar
+- Salt
+- Pepper
