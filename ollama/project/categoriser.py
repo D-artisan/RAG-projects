@@ -66,15 +66,19 @@ Sort the items alphabetically within each category.
 """
 
 try:
-    response = client.generate(model=model_name, prompt=prompt)
-    generated_text = response.get("response", "")
-    print("=== Categorised Grocery List ===")
-    print(generated_text)
+    response = client.generate(model=model_name, prompt=prompt, think=False, stream=True)
+    # generated_text = response.get("response", "")
+    # print("=== Categorised Grocery List ===")
+    # print(generated_text)
 
-    with open(output_file, 'w') as f:
-        f.write(generated_text.strip())
+    # with open(output_file, 'w') as f:
+    #     f.write(generated_text.strip())
 
-    print(f"Categorised grocery list saved to {output_file}")
+    for chunk in response:
+        print(chunk.get("response", ""), end="", flush=True)
+
+    # print(f"Categorised grocery list saved to {output_file}")
+    print("\n")
 except Exception as e:
     print(f"An error occurred: {e}")
     exit(1)
