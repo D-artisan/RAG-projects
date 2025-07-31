@@ -13,6 +13,9 @@ load_dotenv(dotenv_path)
 
 base_url = os.getenv("OLLAMA_BASE_URL")
 model_name = os.getenv("OLLAMA_MODEL")
+input_file_path = os.getenv("INPUT_FILE_PATH")
+output_file_path = os.getenv("OUTPUT_FILE_PATH")
+
 if not base_url:
     print("Error: OLLAMA_BASE_URL is not set in the .env file.")
     exit(1)
@@ -35,8 +38,8 @@ except Exception as e:
 client = ollama.Client(host=base_url)
 
 
-input_file = "/home/dnti/dartisan/ai-projects/RAG-projects/ollama/project/data/grocery_list.txt"
-output_file = "/home/dnti/dartisan/ai-projects/RAG-projects/ollama/project/data/categorised_grocery_list.txt"
+input_file = input_file_path
+output_file = output_file_path
 
 if not os.path.exists(input_file):
     print(f"Input file {input_file} does not exist.")

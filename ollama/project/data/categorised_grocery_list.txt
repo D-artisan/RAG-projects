@@ -1,34 +1,8 @@
-Here's how I would categorize these groceries:
-
-- **Dairy**:
-  - Butter
-  - Cheese
-  - Eggs
-  - Milk
-
-- **Fruits**:
-  - Apples
-  - Bananas
-
-- **Grains**:
-  - Bread
-  - Pasta
-  - Rice
-
-- **Proteins**:
-  - Chicken
-
-- **Vegetables**:
-  - Carrots
-  - Onions
-  - Potatoes
-  - Spinach
-  - Tomatoes
-
-- **Beverages**:
-  - Coffee
-  - Tea
-
-- **Pantry Staples**:
-  - Salt
-  - Sugar
+- Fruits: [Apples, Bananas]
+- Dairy: [Butter, Cheese, Eggs, Milk]
+- Vegetables: [Carrots, Onions, Potatoes, Spinach, Tomatoes]
+- Grains: [Bread, Pasta, Rice]
+- Proteins: [Chicken]
+- Beverages: [Coffee, Tea]
+- Pantry Staples: [Sugar]
+- Spices & Seasonings: [Salt, Pepper]
