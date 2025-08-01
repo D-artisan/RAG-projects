@@ -86,6 +86,12 @@ if response.status_code == 200:
         print(f"{Colors.GREEN}✅ Response completed successfully!{Colors.RESET}")
         print(f"{Colors.BLUE}📊 Total characters:{Colors.RESET} {Colors.BOLD}{len(response_text)}{Colors.RESET}")
         
+        # After streaming, write only the valuable response to file
+        with open("response.md", "w", encoding="utf-8") as f:
+            f.write("# Response\n\n")
+            f.write(response_text.strip() + "\n")
+        print("Response written to response.md")
+        
     except json.JSONDecodeError as e:
         print(f"\n{Colors.RED}❌ JSON parsing error:{Colors.RESET} {Colors.BOLD}{e}{Colors.RESET}")
     except Exception as e:
