@@ -3,6 +3,7 @@ import os
 from dotenv import load_dotenv
 import time
 import re
+import datetime
 
 # ANSI color codes for styling
 class Colors:
@@ -61,6 +62,10 @@ print(f"\n{Colors.CYAN}🔄 Generating response...{Colors.RESET}\n")
 print(f"{Colors.GREEN}{Colors.BOLD}📝 Response:{Colors.RESET}")
 print(f"{Colors.WHITE}{'-' * 30}{Colors.RESET}")
 
+# Ensure 'responses' directory exists
+responses_dir = os.path.join(os.getcwd(), "responses-2")
+os.makedirs(responses_dir, exist_ok=True)
+
 try:
     res = client.chat(
         model=model_name, 
@@ -81,6 +86,13 @@ try:
     print(f"\n{Colors.WHITE}{'-' * 30}{Colors.RESET}")
     print(f"{Colors.GREEN}✅ Response completed successfully!{Colors.RESET}")
     print(f"{Colors.BLUE}📊 Total characters:{Colors.RESET} {Colors.BOLD}{len(response_text)}{Colors.RESET}")
+
+    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    response_file = os.path.join(responses_dir, f"response_{timestamp}.md")
+    with open(response_file, "w", encoding="utf-8") as f:
+        f.write("# Response\n\n")
+        f.write(response_text.strip() + "\n")
+    print(f"Response written to {response_file}")
     
 except Exception as e:
     print(f"\n{Colors.RED}❌ Error occurred:{Colors.RESET} {Colors.BOLD}{e}{Colors.RESET}")

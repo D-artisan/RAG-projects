@@ -3,6 +3,7 @@ import json
 import os
 from dotenv import load_dotenv
 import re
+import datetime
 
 # ANSI color codes for styling
 class Colors:
@@ -65,6 +66,10 @@ response = requests.post(url, json=data, stream=True)
 print(f"{Colors.GREEN}{Colors.BOLD}📝 Response:{Colors.RESET}")
 print(f"{Colors.WHITE}{'-' * 30}{Colors.RESET}")
 
+# Ensure 'responses' directory exists
+responses_dir = os.path.join(os.getcwd(), "responses")
+os.makedirs(responses_dir, exist_ok=True)
+
 # check the response status
 if response.status_code == 200:
     try:
@@ -87,10 +92,13 @@ if response.status_code == 200:
         print(f"{Colors.BLUE}📊 Total characters:{Colors.RESET} {Colors.BOLD}{len(response_text)}{Colors.RESET}")
         
         # After streaming, write only the valuable response to file
-        with open("response.md", "w", encoding="utf-8") as f:
+        # Create a unique filename using timestamp
+        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        response_file = os.path.join(responses_dir, f"response_{timestamp}.md")
+        with open(response_file, "w", encoding="utf-8") as f:
             f.write("# Response\n\n")
             f.write(response_text.strip() + "\n")
-        print("Response written to response.md")
+        print(f"Response written to {response_file}")
         
     except json.JSONDecodeError as e:
         print(f"\n{Colors.RED}❌ JSON parsing error:{Colors.RESET} {Colors.BOLD}{e}{Colors.RESET}")
