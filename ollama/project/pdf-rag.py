@@ -88,7 +88,7 @@ from langchain.retrievers.multi_query import MultiQueryRetriever
 # set up our model to use
 llm = ChatOllama(
     model=model_name,
-    base_url=base_url,           # ← and here!
+    base_url=base_url,           
 )
 
 # a simple technique to generate multiple questions from a single question and then retrieve documents
