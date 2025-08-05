@@ -13,7 +13,7 @@ if not dotenv_path.exists():
     dotenv_path = Path(__file__).parent.parent / '.env'
 load_dotenv(dotenv_path)
 
-base_url = os.getenv("OLLAMA_BASE_URL")
+base_url = os.getenv("OLLAMA_API_URL")
 
 
 ollama_model = os.getenv("OLLAMA_MODEL")

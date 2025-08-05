@@ -1,11 +1,20 @@
 import json
+import os
 from typing import Dict, Any
+from pathlib import Path
+from dotenv import load_dotenv
 
 from swarm import Agent, Swarm
 from openai import OpenAI
 
+# Load .env from parent directory
+dotenv_path = Path(__file__).parent.parent / '.env'
+load_dotenv(dotenv_path)
+
+base_url = os.getenv("OLLAMA_API_URL")
+
 ollama_client = OpenAI(
-    base_url="http://localhost:11434/v1",
+    base_url=base_url,
     api_key="ollama",  # required, but unused
 )
 
