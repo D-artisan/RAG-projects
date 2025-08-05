@@ -1,0 +1,10 @@
+Here is your grocery list categorized and sorted alphabetically:
+
+- **Fruits**: [Apples, Bananas]
+- **Vegetables**: [Carrots, Onions, Potatoes, Spinach, Tomatoes]
+- **Dairy**: [Butter, Cheese, Eggs, Milk]
+- **Grains**: [Bread, Pasta, Rice]
+- **Proteins**: [Chicken]
+- **Snacks**: []
+- **Beverages**: [Coffee, Tea]
+- **Condiments**: [Pepper, Salt]

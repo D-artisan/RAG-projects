@@ -4,3 +4,7 @@
 .\ollama\business-service-llama2\chroma_db
 *.env
 venv/
+ollama/model_list.txt
+ollama/swarm-writer-agents/news-summarizer/config/.DS_Store
+ollama/swarm-writer-agents/.DS_Store
+ollama/swarm-writer-agents/ai-recruiter-agency/.DS_Store
